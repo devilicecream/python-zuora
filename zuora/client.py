@@ -95,7 +95,7 @@ class Zuora:
 
         username : str : username for logging into Zuora
         password : str : password for logging into Zuora
-        wsdl_file : str : path to local wsdl file used for suds library
+        wsdl_file : str : path to wsdl file used for suds library
 
         Optional dictionary settings:
 
@@ -120,8 +120,11 @@ class Zuora:
         imp.filter.add('http://fault.api.zuora.com/')
         schema_doctor = ImportDoctor(imp)
 
-        wsdl_file = 'file://%s' % path.abspath(
-                                    self.base_dir + "/" + self.wsdl_file)
+        if self.wsdl_file.startswith("/"):
+            wsdl_file = 'file://%s' % path.abspath(self.wsdl_file)
+        else:
+            wsdl_file = 'file://%s' % path.abspath(
+                                        self.base_dir + "/" + self.wsdl_file)
 
         self.client = Client(
                         url=wsdl_file,
