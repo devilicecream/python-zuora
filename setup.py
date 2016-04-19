@@ -2,7 +2,7 @@
 
 setupArgs = {
     'name': 'zuora',
-    'version': '1.0.16',
+    'version': '1.0.16.1',
     'author': 'MapMyFitness',
     'author_email': 'brandon.fredericks@mapmyfitness.com',
     'url': 'http://github.com/mapmyfitness/python-zuora',
@@ -38,7 +38,7 @@ else:
     setupArgs.update({
         'tests_require': ['pytest'],
         'cmdclass': {'test': TestRunner},
-        'install_requires': ['suds >= 0.4', 'requests'],
+        'install_requires': ['suds >= 0.4', 'requests', 'httplib2'],
         'zip_safe': False,
     })
 
