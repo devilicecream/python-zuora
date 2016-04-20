@@ -951,7 +951,7 @@ class Zuora:
         elif sku:
             qs_filter = "SKU = '%s'" % sku
         elif name:
-            qs_filter = "Name = '%s'" % sku
+            qs_filter = "Name = '%s'" % name
         if qs_filter:
             qs += " WHERE %s" % qs_filter
 
@@ -1031,10 +1031,8 @@ class Zuora:
         """
         qs = """
             SELECT
-                ActivityLevel__c, AgeGroup__c,
                 Description, EffectiveEndDate, EffectiveStartDate,
-                Gender__c, Id, Name,
-                Priority__c, ProductId, Site__c, Term__c
+                Id, Name, ProductId
             FROM ProductRatePlan
             """
 
@@ -1088,14 +1086,13 @@ class Zuora:
             SELECT
                 AccountingCode, BillCycleDay, BillCycleType, BillingPeriod,
                 BillingPeriodAlignment, ChargeModel, ChargeType,
-                CustomImageURL__c, DefaultQuantity, Description,
-                ExclusiveOfferFlag__c,
-                HiddenBenefitText__c, Id,  IncludedUnits, MaxQuantity,
+                DefaultQuantity, Description,
+                Id,  IncludedUnits, MaxQuantity,
                 MinQuantity, Name, NumberOfPeriod, OverageCalculationOption,
                 OverageUnusedUnitsCreditOption,
                 PriceIncreasePercentage, ProductRatePlanId,
-                RevRecCode, RevRecTriggerCondition, ShortCode__c,
-                SmoothingModel, SortOrder__c, SpecificBillingPeriod,
+                RevRecCode, RevRecTriggerCondition,
+                SmoothingModel, SpecificBillingPeriod,
                 TriggerEvent, UOM, UpToPeriods,
                 UseDiscountSpecificAccountingCode
             FROM ProductRatePlanCharge
@@ -1709,13 +1706,6 @@ class Zuora:
         elif self.authorize_gateway:
             zAccount.PaymentGateway = self.authorize_gateway
 
-        if self.create_test_users:
-            zAccount.Test_Account__c = 1
-            zAccount.User_Site__c = "staging"
-
-        if site_name:
-            zAccount.User_Site__c = site_name
-        
         # If specifying a gateway, the account will be created
         # during the subscribe call
         if lazy or gateway_name:
@@ -1905,10 +1895,6 @@ class Zuora:
         zSubscription.Status = 'Active'
         zSubscription.AutoRenew = recurring
         zSubscription.TermType = term_type
-
-        # Add Order
-        if order_id:
-            zSubscription.OrderId__c = order_id
 
         return zSubscription
 
