@@ -928,31 +928,30 @@ class Zuora:
             return zPaymentMethods
         return []
 
-    def get_products(self, product_id=None, shortcodes=None):
+    def get_products(self, product_id=None, sku=None, name=None):
         """
         Gets the Product.
 
         :param str product_id: ProductID
-        :param list shortcodes: List of shortcode strings
+        :param str sku: SKU
+        :param str name: Product Name
         """
         qs_filter = None
 
         qs = """
             SELECT
                 Description, EffectiveEndDate, EffectiveStartDate,
-                Id, SKU, Name, ShortCode__c
+                Id, SKU, Name
             FROM Product
             """
 
         # If we're looking for one specific product
         if product_id:
             qs_filter = "Id = '%s'" % product_id
-        # If we're pulling multiple products by their shortcodes
-        elif shortcodes:
-            qs_filter_list = ["ShortCode__c = '%s'" % code
-                                for code in shortcodes]
-            qs_filter = " OR ".join(qs_filter_list)
-
+        elif sku:
+            qs_filter = "SKU = '%s'" % sku
+        elif name:
+            qs_filter = "Name = '%s'" % sku
         if qs_filter:
             qs += " WHERE %s" % qs_filter
 
