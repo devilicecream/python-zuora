@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 log_suds = logging.getLogger('suds')
 log_suds.propagate = False
 
-SOAP_TIMESTAMP = '%Y-%m-%dT%H:%M:%S-06:00'
+SOAP_TIMESTAMP = '%Y-%m-%d'
 
 
 from rest_client import RestClient
@@ -204,6 +204,29 @@ class Zuora:
         # return the response
         return response
 
+    def amend(self, amendments, amend_options=None):
+        """
+        Use amend() to to generate an invoice and capture payment
+        electronically when amending subscriptions. The call also allows
+        you to preview the invoices before amending the subscription.
+
+        :param z_object z_object: object to amend
+
+        :returns: the API response
+        """
+
+        # Call Create
+        fn = self.client.service.amend
+        request = self.client.factory.create("ns0:AmendRequest")
+        request.Amendments = amendments
+        if amend_options:
+            request.AmendOptions = amend_options
+        log.info("***Zuora Amend Request: %s" % request)
+        response = self.call(fn, request)
+        log.info("***Zuora Amend Response: %s" % response)
+        # return the response
+        return response
+
     def delete(self, obj_type, id_list=[]):
         """
         Deletes one or more objects of the same type. You can specify different
@@ -310,6 +333,64 @@ class Zuora:
 
         # return the response
         return response
+
+    def amend_new_product(self, name, subscription_id, product_rate_plan_id,
+                          product_charge_id, charge_number=None, description=None,
+                          status='Completed'):
+        """
+        Use Amendment to make changes to a subscription. For example, if you
+        wish to change the terms and conditions of a subscription, you would
+        use an Amendment.
+
+        :param str name: A name for the amendment. (100 chars)
+        :param str subscription_id: The identification number for the\
+            subscription that is being amended.
+        :param str product_rate_plan_id: ProductRatePlanID
+
+        :returns: response
+        """
+        effective_date = datetime.now().strftime(SOAP_TIMESTAMP)
+
+        zAmendment = self.client.factory.create('ns2:Amendment')
+        zAmendment.ContractEffectiveDate = effective_date
+        if name:
+            zAmendment.Name = name
+        else:
+            zAmendment.Name = "%s %s" % (name, effective_date)
+        zAmendment.Status = status
+        zAmendment.SubscriptionId = subscription_id
+        zAmendment.Type = "NewProduct"
+        if description:
+            zAmendment.Description = description
+        zAmendment.ServiceActivationDate = effective_date
+        # zAmendment.CustomerAcceptance = False
+        zRPData = self.client.factory.create('ns0:RatePlanData')
+        zRP = self.client.factory.create('ns0:RatePlan')
+        zRP.AmendmentType = 'NewProduct'
+        zRP.ProductRatePlanId = product_rate_plan_id
+        zRP.SubscriptionId = subscription_id
+        zRPData.RatePlan = zRP
+        zRPCData = self.client.factory.create('ns0:RatePlanChargeData')
+        zRPC = self.client.factory.create('ns0:RatePlanCharge')
+        if charge_number:
+            zRPC.ChargeNumber = charge_number
+        zRPC.ProductRatePlanChargeId = product_charge_id
+        zRPCData.RatePlanCharge = zRPC
+
+        zRPData.RatePlanChargeData = zRPCData
+        zAmendment.RatePlanData = zRPData
+
+        # AmendOptions
+        zOptions = self.client.factory.create('ns0:AmendOptions')
+        zOptions.ProcessPayments = False
+
+        # Create Amendment
+        response = self.amend([zAmendment], zOptions)
+        if not isinstance(response, list) or not response[0].Success:
+            raise ZuoraException(
+                "Unknown Error creating Amendment. %s" % response)
+        zAmendment.Id = response[0].AmendmentIds[0]
+        return zAmendment
 
     def create_product_amendment(self, effective_date, subscription_id,
                                   name_prepend, amendment_type,
